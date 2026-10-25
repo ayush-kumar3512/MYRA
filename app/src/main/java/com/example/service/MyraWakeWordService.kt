@@ -253,8 +253,23 @@ class MyraWakeWordService : Service() {
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "hi-IN")
                     putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf("en-IN", "en-US", "hi-IN"))
                     putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName)
+                    putExtra("android.speech.extra.DICTATION_MODE", true)
                 }
+
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
+                try {
+                    audioManager?.adjustStreamVolume(android.media.AudioManager.STREAM_NOTIFICATION, android.media.AudioManager.ADJUST_MUTE, 0)
+                    audioManager?.adjustStreamVolume(android.media.AudioManager.STREAM_SYSTEM, android.media.AudioManager.ADJUST_MUTE, 0)
+                } catch (e: Exception) {}
+
                 speechRecognizer?.startListening(intent)
+
+                mainHandler.postDelayed({
+                    try {
+                        audioManager?.adjustStreamVolume(android.media.AudioManager.STREAM_NOTIFICATION, android.media.AudioManager.ADJUST_UNMUTE, 0)
+                        audioManager?.adjustStreamVolume(android.media.AudioManager.STREAM_SYSTEM, android.media.AudioManager.ADJUST_UNMUTE, 0)
+                    } catch (e: Exception) {}
+                }, 400)
             } catch (e: Exception) {
                 DiagnosticLogger.w(TAG, "Error re-starting wake word recognizer", e)
             }

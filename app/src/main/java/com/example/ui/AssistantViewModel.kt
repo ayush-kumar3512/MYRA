@@ -3,6 +3,7 @@ package com.example.ui
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -282,9 +283,24 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "hi-IN")
                     putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf("en-IN", "en-US", "hi-IN"))
                     putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getApplication<Application>().packageName)
+                    putExtra("android.speech.extra.DICTATION_MODE", true)
                 }
+
+                // Temporarily silence system beep so microphone opens 100% silently
+                val audioManager = getApplication<Application>().getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+                try {
+                    audioManager?.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_MUTE, 0)
+                    audioManager?.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_MUTE, 0)
+                } catch (e: Exception) {}
+
                 speechRecognizer?.startListening(recognizerIntent)
-                DiagnosticLogger.d(TAG, "SpeechRecognizer started listening")
+                DiagnosticLogger.d(TAG, "SpeechRecognizer started silently listening")
+
+                delay(400)
+                try {
+                    audioManager?.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_UNMUTE, 0)
+                    audioManager?.adjustStreamVolume(AudioManager.STREAM_SYSTEM, AudioManager.ADJUST_UNMUTE, 0)
+                } catch (e: Exception) {}
             } catch (e: Exception) {
                 DiagnosticLogger.w(TAG, "Failed to start SpeechRecognizer", e)
             }

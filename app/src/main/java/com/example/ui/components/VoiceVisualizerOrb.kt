@@ -54,11 +54,21 @@ fun VoiceVisualizerOrb(
         label = "rotation"
     )
 
-    val breathingScale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
+    val counterRotation by infiniteTransition.animateFloat(
+        initialValue = 360f,
+        targetValue = 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+            animation = tween(durationMillis = 8500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "counter_rotation"
+    )
+
+    val breathingScale by infiniteTransition.animateFloat(
+        initialValue = 0.94f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "breathing"
@@ -68,10 +78,20 @@ fun VoiceVisualizerOrb(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            animation = tween(durationMillis = 1400, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "pulse_phase"
+    )
+
+    val pulsePhase2 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse_phase_2"
     )
 
     val primaryColor by animateColorAsState(
@@ -101,7 +121,7 @@ fun VoiceVisualizerOrb(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(270.dp)
+            .size(280.dp)
             .testTag("voice_visualizer_orb")
             .clickable(
                 indication = null,
@@ -109,47 +129,58 @@ fun VoiceVisualizerOrb(
                 onClick = onClick
             )
     ) {
-        Canvas(modifier = Modifier.size(270.dp)) {
+        Canvas(modifier = Modifier.size(280.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val baseRadius = (size.minDimension / 3.4f) * breathingScale
-            val dynamicRadius = baseRadius + (amplitude * 45f)
+            val dynamicRadius = baseRadius + (amplitude * 48f)
 
-            // 1. Outer ambient glow ring
+            // 1. Ambient outer aura
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        primaryColor.copy(alpha = 0.4f + (amplitude * 0.4f).coerceAtMost(0.5f)),
-                        secondaryColor.copy(alpha = 0.2f),
+                        primaryColor.copy(alpha = 0.45f + (amplitude * 0.4f).coerceAtMost(0.5f)),
+                        secondaryColor.copy(alpha = 0.25f),
                         Color.Transparent
                     ),
                     center = center,
-                    radius = dynamicRadius * 1.6f
+                    radius = dynamicRadius * 1.7f
                 ),
-                radius = dynamicRadius * 1.6f,
+                radius = dynamicRadius * 1.7f,
                 center = center
             )
 
-            // 2. Expanding acoustic ripple wave (when active)
+            // 2. Dual expanding acoustic shockwaves
             if (status == AssistantStatus.LISTENING || status == AssistantStatus.SPEAKING) {
-                val rippleRadius = dynamicRadius + (pulsePhase * 50f)
-                val rippleAlpha = (1f - pulsePhase) * 0.45f
+                // Wave 1
+                val rippleRadius = dynamicRadius + (pulsePhase * 55f)
+                val rippleAlpha = (1f - pulsePhase) * 0.5f
                 drawCircle(
                     color = primaryColor.copy(alpha = rippleAlpha),
                     radius = rippleRadius,
                     center = center,
                     style = Stroke(width = 3.dp.toPx())
                 )
+
+                // Wave 2
+                val rippleRadius2 = dynamicRadius + (pulsePhase2 * 45f)
+                val rippleAlpha2 = (1f - pulsePhase2) * 0.35f
+                drawCircle(
+                    color = secondaryColor.copy(alpha = rippleAlpha2),
+                    radius = rippleRadius2,
+                    center = center,
+                    style = Stroke(width = 2.dp.toPx())
+                )
             }
 
-            // 3. Rotating orbital sound wave arcs
+            // 3. Rotating orbital sound wave rays (Clockwise)
             val numArcs = 8
             for (i in 0 until numArcs) {
                 val angleRad = Math.toRadians((rotation + (i * (360f / numArcs))).toDouble())
-                val arcRadius = dynamicRadius * 1.1f + (sin(angleRad * 3) * 6f).toFloat() * (1f + amplitude * 2f)
-                val startX = center.x + (cos(angleRad) * (arcRadius - 12f)).toFloat()
-                val startY = center.y + (sin(angleRad) * (arcRadius - 12f)).toFloat()
-                val endX = center.x + (cos(angleRad) * (arcRadius + 14f + (amplitude * 35f))).toFloat()
-                val endY = center.y + (sin(angleRad) * (arcRadius + 14f + (amplitude * 35f))).toFloat()
+                val arcRadius = dynamicRadius * 1.12f + (sin(angleRad * 3) * 6f).toFloat() * (1f + amplitude * 2f)
+                val startX = center.x + (cos(angleRad) * (arcRadius - 10f)).toFloat()
+                val startY = center.y + (sin(angleRad) * (arcRadius - 10f)).toFloat()
+                val endX = center.x + (cos(angleRad) * (arcRadius + 16f + (amplitude * 35f))).toFloat()
+                val endY = center.y + (sin(angleRad) * (arcRadius + 16f + (amplitude * 35f))).toFloat()
 
                 drawLine(
                     brush = Brush.linearGradient(
@@ -161,16 +192,31 @@ fun VoiceVisualizerOrb(
                     cap = StrokeCap.Round
                 )
             }
+
+            // 4. Orbiting energy particles (Counter-Clockwise Sparks)
+            val numSparks = 4
+            for (i in 0 until numSparks) {
+                val sparkAngle = Math.toRadians((counterRotation + (i * (360f / numSparks))).toDouble())
+                val sparkDist = dynamicRadius * 1.35f + (sin(sparkAngle * 2) * 8f).toFloat()
+                val sparkX = center.x + (cos(sparkAngle) * sparkDist).toFloat()
+                val sparkY = center.y + (sin(sparkAngle) * sparkDist).toFloat()
+
+                drawCircle(
+                    color = primaryColor.copy(alpha = 0.85f),
+                    radius = (3f + (amplitude * 4f)).dp.toPx(),
+                    center = Offset(sparkX, sparkY)
+                )
+            }
         }
 
-        // Central MYRA Logo Avatar with breathing and glow
+        // Central MYRA Logo Avatar with fluid breathing and glow
         Image(
             painter = painterResource(R.drawable.myra_logo),
             contentDescription = "MYRA AI Logo",
             modifier = Modifier
                 .size((140.dp * breathingScale) + (amplitude * 24).dp)
                 .shadow(
-                    elevation = 18.dp,
+                    elevation = 20.dp,
                     shape = CircleShape,
                     spotColor = primaryColor
                 )

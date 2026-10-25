@@ -1,6 +1,9 @@
 package com.example.ui.components
 
+import android.app.role.RoleManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -266,15 +269,30 @@ fun SettingsDialog(
                     }
                     OutlinedButton(
                         onClick = {
-                            val intent = Intent(Settings.ACTION_VOICE_INPUT_SETTINGS).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            var launched = false
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val roleManager = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
+                                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_ASSISTANT)) {
+                                    try {
+                                        val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_ASSISTANT).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(intent)
+                                        launched = true
+                                    } catch (e: Exception) {}
+                                }
                             }
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                context.startActivity(Intent(Settings.ACTION_SETTINGS).apply {
+                            if (!launched) {
+                                val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                })
+                                }
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    context.startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    })
+                                }
                             }
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF06B6D4)),
