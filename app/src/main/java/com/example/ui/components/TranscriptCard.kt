@@ -14,10 +14,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
@@ -153,6 +156,9 @@ fun DeviceActionBadge(
         "openWhatsApp", "openApp" -> Icons.AutoMirrored.Filled.OpenInNew
         "makeCall", "callContact" -> Icons.Default.Call
         "openUrl" -> Icons.Default.Language
+        "toggleFlashlight" -> Icons.Default.FlashOn
+        "setAlarm", "setTimer" -> Icons.Default.Alarm
+        "openNotificationSettings" -> Icons.Default.Notifications
         else -> if (success) Icons.Default.CheckCircle else Icons.Default.Error
     }
 

@@ -145,6 +145,70 @@ class GeminiRestFallback(
                                     }
                                     put("parameters", params)
                                 })
+                                put(JSONObject().apply {
+                                    put("name", "toggleFlashlight")
+                                    put("description", "Turns the phone flashlight / torch on or off. Call when user says 'Torch jalao', 'Turn on flashlight', 'Torch band karo', etc.")
+                                    val params = JSONObject().apply {
+                                        put("type", "OBJECT")
+                                        val props = JSONObject().apply {
+                                            put("enable", JSONObject().apply {
+                                                put("type", "BOOLEAN")
+                                                put("description", "True to turn on flashlight, False to turn off")
+                                            })
+                                        }
+                                        put("properties", props)
+                                        put("required", JSONArray().apply { put("enable") })
+                                    }
+                                    put("parameters", params)
+                                })
+                                put(JSONObject().apply {
+                                    put("name", "setAlarm")
+                                    put("description", "Sets an alarm on the phone clock. Call when user says 'Set alarm for 7 AM', 'Subah 6 baje ka alarm lagao', etc.")
+                                    val params = JSONObject().apply {
+                                        put("type", "OBJECT")
+                                        val props = JSONObject().apply {
+                                            put("hour", JSONObject().apply {
+                                                put("type", "INTEGER")
+                                                put("description", "Hour in 24-hour format (0-23)")
+                                            })
+                                            put("minutes", JSONObject().apply {
+                                                put("type", "INTEGER")
+                                                put("description", "Minutes (0-59)")
+                                            })
+                                            put("message", JSONObject().apply {
+                                                put("type", "STRING")
+                                                put("description", "Alarm label or title")
+                                            })
+                                        }
+                                        put("properties", props)
+                                        put("required", JSONArray().apply { put("hour"); put("minutes") })
+                                    }
+                                    put("parameters", params)
+                                })
+                                put(JSONObject().apply {
+                                    put("name", "setTimer")
+                                    put("description", "Sets a countdown timer. Call when user says 'Set timer for 5 minutes', '10 minute ka timer lagao', etc.")
+                                    val params = JSONObject().apply {
+                                        put("type", "OBJECT")
+                                        val props = JSONObject().apply {
+                                            put("seconds", JSONObject().apply {
+                                                put("type", "INTEGER")
+                                                put("description", "Duration in seconds")
+                                            })
+                                            put("message", JSONObject().apply {
+                                                put("type", "STRING")
+                                                put("description", "Timer label")
+                                            })
+                                        }
+                                        put("properties", props)
+                                        put("required", JSONArray().apply { put("seconds") })
+                                    }
+                                    put("parameters", params)
+                                })
+                                put(JSONObject().apply {
+                                    put("name", "openNotificationSettings")
+                                    put("description", "Opens notifications settings or notification panel. Call when user asks about notifications.")
+                                })
                             }
                             put("functionDeclarations", funcs)
                         }
@@ -197,6 +261,10 @@ class GeminiRestFallback(
                             "openUrl" -> actionManager.openUrl(args.optString("url", ""))
                             "makeCall" -> actionManager.makeCall(args.optString("phoneNumber", ""))
                             "callContact" -> actionManager.callContact(args.optString("contactName", ""))
+                            "toggleFlashlight" -> actionManager.toggleFlashlight(args.optBoolean("enable", true))
+                            "setAlarm" -> actionManager.setAlarm(args.optInt("hour", 7), args.optInt("minutes", 0), args.optString("message", "MYRA Alarm"))
+                            "setTimer" -> actionManager.setTimer(args.optInt("seconds", 60), args.optString("message", "MYRA Timer"))
+                            "openNotificationSettings" -> actionManager.openNotificationSettings()
                             else -> null
                         }
                     }
@@ -218,7 +286,7 @@ class GeminiRestFallback(
             }
         }
 
-        // If all candidate models fail (e.g. offline or invalid key), return natural friendly reply
-        RestAiResponse("Main aapko sun rahi hoon! Kuch poochna ya open karna chahte hain? (Jaise 'WhatsApp kholo' ya 'Call Mom')")
+        // If all candidate models fail (e.g. offline), return natural friendly reply
+        RestAiResponse("Main aapko sun rahi hoon! Kuch poochna ya open karna chahte hain? (Jaise 'Torch jalao', 'WhatsApp kholo', ya 'Subah 7 baje ka alarm lagao')")
     }
 }

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.provider.AlarmClock
 import android.provider.ContactsContract
 import android.provider.MediaStore
+import android.hardware.camera2.CameraManager
 import android.provider.Settings
 import com.example.data.DiagnosticLogger
 
@@ -296,6 +297,115 @@ class DeviceActionManager(private val context: Context) {
                     message = "I found ${matchingContacts.size} contacts matching '$query': ${namesList.joinToString(", ")}. Which one should I call?",
                     data = mapOf("matches" to matchingContacts.map { mapOf("name" to it.name, "number" to it.phoneNumber) })
                 )
+            }
+        }
+    }
+
+    /**
+     * Toggles device flashlight / torch.
+     */
+    fun toggleFlashlight(enable: Boolean): DeviceActionResult {
+        DiagnosticLogger.i(TAG, "Executing toggleFlashlight(enable=$enable)")
+        return try {
+            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
+            val cameraId = cameraManager?.cameraIdList?.firstOrNull()
+            if (cameraManager != null && cameraId != null) {
+                cameraManager.setTorchMode(cameraId, enable)
+                val statusText = if (enable) "Flashlight turned on" else "Flashlight turned off"
+                DiagnosticLogger.i(TAG, statusText)
+                DeviceActionResult(
+                    success = true,
+                    action = "toggleFlashlight",
+                    message = statusText,
+                    data = mapOf("torchEnabled" to enable)
+                )
+            } else {
+                DeviceActionResult(false, "toggleFlashlight", "Flashlight hardware is not available on this device.")
+            }
+        } catch (e: Exception) {
+            DiagnosticLogger.e(TAG, "Error toggling flashlight", e)
+            DeviceActionResult(false, "toggleFlashlight", "Could not toggle flashlight: ${e.message}")
+        }
+    }
+
+    /**
+     * Sets an alarm on the device clock.
+     */
+    fun setAlarm(hour: Int, minutes: Int, message: String = "MYRA Alarm"): DeviceActionResult {
+        DiagnosticLogger.i(TAG, "Executing setAlarm(hour=$hour, minutes=$minutes, message='$message')")
+        return try {
+            val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
+                putExtra(AlarmClock.EXTRA_HOUR, hour)
+                putExtra(AlarmClock.EXTRA_MINUTES, minutes)
+                putExtra(AlarmClock.EXTRA_MESSAGE, message)
+                putExtra(AlarmClock.EXTRA_SKIP_UI, false)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            val formattedTime = String.format("%02d:%02d", hour, minutes)
+            DiagnosticLogger.i(TAG, "Alarm set for $formattedTime")
+            DeviceActionResult(
+                success = true,
+                action = "setAlarm",
+                message = "Alarm set for $formattedTime ($message)",
+                data = mapOf("hour" to hour, "minutes" to minutes, "message" to message)
+            )
+        } catch (e: Exception) {
+            DiagnosticLogger.e(TAG, "Error setting alarm", e)
+            DeviceActionResult(false, "setAlarm", "Could not set alarm: ${e.message}")
+        }
+    }
+
+    /**
+     * Sets a countdown timer on the device.
+     */
+    fun setTimer(seconds: Int, message: String = "MYRA Timer"): DeviceActionResult {
+        DiagnosticLogger.i(TAG, "Executing setTimer(seconds=$seconds, message='$message')")
+        return try {
+            val intent = Intent(AlarmClock.ACTION_SET_TIMER).apply {
+                putExtra(AlarmClock.EXTRA_LENGTH, seconds)
+                putExtra(AlarmClock.EXTRA_MESSAGE, message)
+                putExtra(AlarmClock.EXTRA_SKIP_UI, false)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            val mins = seconds / 60
+            val secs = seconds % 60
+            val timeText = if (mins > 0) "$mins min $secs sec" else "$secs seconds"
+            DiagnosticLogger.i(TAG, "Timer started for $timeText")
+            DeviceActionResult(
+                success = true,
+                action = "setTimer",
+                message = "Timer started for $timeText",
+                data = mapOf("seconds" to seconds)
+            )
+        } catch (e: Exception) {
+            DiagnosticLogger.e(TAG, "Error setting timer", e)
+            DeviceActionResult(false, "setTimer", "Could not set timer: ${e.message}")
+        }
+    }
+
+    /**
+     * Reads / opens notification listener or settings.
+     */
+    fun openNotificationSettings(): DeviceActionResult {
+        DiagnosticLogger.i(TAG, "Executing openNotificationSettings()")
+        return try {
+            val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            DeviceActionResult(true, "openNotificationSettings", "Opened notification access settings")
+        } catch (e: Exception) {
+            try {
+                val fallbackIntent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(fallbackIntent)
+                DeviceActionResult(true, "openNotificationSettings", "Opened notification settings")
+            } catch (e2: Exception) {
+                DeviceActionResult(false, "openNotificationSettings", "Failed to open notifications: ${e2.message}")
             }
         }
     }

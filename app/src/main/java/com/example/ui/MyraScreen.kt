@@ -411,12 +411,14 @@ fun MyraScreen(
                         .padding(vertical = 4.dp)
                 ) {
                     val promptSuggestions = listOf(
+                        "Torch jalao",
+                        "Set alarm for 7 AM",
                         "WhatsApp kholo",
                         "Call Mom",
                         "Open YouTube",
+                        "5 min ka timer lagao",
                         "Hindi mein baat karo",
-                        "Tell me a witty joke",
-                        "Open Instagram"
+                        "Tell me a witty joke"
                     )
                     promptSuggestions.forEach { suggestion ->
                         Surface(

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Settings
@@ -32,8 +33,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.service.MyraAccessibilityService
+import com.example.service.MyraWakeWordService
 import com.example.ui.MyraSettings
 
 @Composable
@@ -56,6 +62,7 @@ fun SettingsDialog(
     val context = LocalContext.current
     val voices = listOf("Aoede", "Puck", "Charon", "Kore", "Fenrir")
     val isAccessibilityActive = MyraAccessibilityService.isAccessibilityEnabled(context)
+    val isWakeWordRunning by MyraWakeWordService.isServiceRunning.collectAsState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -123,14 +130,63 @@ fun SettingsDialog(
 
                 // Background Assistant & Accessibility Section
                 Text(
-                    text = "Background Assistant & Access",
+                    text = "Background Triggers & Actions",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF94A3B8),
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // 1. Accessibility Service Card
+                // 1. Wake Word ('Hey Myra') Background Service
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF131D33))
+                        .border(1.dp, if (isWakeWordRunning) Color(0xFF059669) else Color(0xFF334155), RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Hearing,
+                        contentDescription = null,
+                        tint = if (isWakeWordRunning) Color(0xFF34D399) else Color(0xFFF59E0B),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Wake Word ('Hey Myra')",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isWakeWordRunning) "Active • Listening for 'Hey Myra'" else "Say 'Hey Myra' to activate anywhere",
+                            color = if (isWakeWordRunning) Color(0xFF34D399) else Color(0xFF94A3B8),
+                            fontSize = 10.sp
+                        )
+                    }
+                    Switch(
+                        checked = isWakeWordRunning,
+                        onCheckedChange = { enable ->
+                            if (enable) {
+                                MyraWakeWordService.start(context)
+                            } else {
+                                MyraWakeWordService.stop(context)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF10B981)
+                        ),
+                        modifier = Modifier.testTag("switch_wake_word")
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 2. Accessibility Service Card
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -178,7 +234,7 @@ fun SettingsDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 2. Default Assistant System Trigger
+                // 3. Default Assistant System Trigger
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -295,13 +351,13 @@ fun SettingsDialog(
                     Spacer(modifier = Modifier.width(6.dp))
                     Column {
                         Text(
-                            text = "Multilingual Recognition",
+                            text = "Smart Actions & Multilingual",
                             color = Color(0xFF38BDF8),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Recognizes Hindi, English & Hinglish automatically.",
+                            text = "Supports Torch 🔦, Alarms ⏰, WhatsApp 💬, Calls 📞, and Apps.",
                             color = Color(0xFF94A3B8),
                             fontSize = 10.sp
                         )
