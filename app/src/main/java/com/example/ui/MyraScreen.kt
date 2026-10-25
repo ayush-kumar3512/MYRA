@@ -89,6 +89,7 @@ fun MyraScreen(
     val settings by viewModel.settings.collectAsState()
     val logs by DiagnosticLogger.logs.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val liveHearingText by viewModel.liveHearingText.collectAsState()
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showLogsSheet by remember { mutableStateOf(false) }
@@ -355,6 +356,33 @@ fun MyraScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
+
+                    AnimatedVisibility(visible = liveHearingText.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF0C4A6E),
+                            modifier = Modifier.padding(top = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = null,
+                                    tint = Color(0xFF38BDF8),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = liveHearingText,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFE0F2FE)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -469,7 +497,6 @@ fun MyraScreen(
     if (showSettingsDialog) {
         SettingsDialog(
             settings = settings,
-            onSaveApiKey = { newKey -> viewModel.updateApiKey(newKey) },
             onSelectVoice = { newVoice -> viewModel.updateVoice(newVoice) },
             onDismiss = { showSettingsDialog = false }
         )

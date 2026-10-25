@@ -20,7 +20,6 @@ data class TranscriptItem(
 )
 
 data class MyraSettings(
-    val apiKey: String = "",
     val selectedVoice: String = "Aoede", // Aoede (female), Puck, Charon, Kore, Fenrir
     val isSpeakerMuted: Boolean = false,
     val languagePreference: String = "Auto Detect (Hindi / English / Hinglish)"

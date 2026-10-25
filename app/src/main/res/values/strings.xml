@@ -30,4 +30,6 @@
     <string name="action_contact_not_found">Contact "%1$s" was not found in your phonebook.</string>
     <string name="action_contact_multiple">Found %1$d contacts matching "%2$s". Please specify which one.</string>
     <string name="error_mic_permission">Microphone permission was denied. Please grant it in device settings.</string>
+    <string name="accessibility_service_description">Enables MYRA to perform voice-activated actions, execute tasks, and respond seamlessly without opening the app.</string>
+    <string name="voice_assistant_service_description">Default voice assistant service for MYRA to handle system-wide voice queries and tasks.</string>
 </resources>

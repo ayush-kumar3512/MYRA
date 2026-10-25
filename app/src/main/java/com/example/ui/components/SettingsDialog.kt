@@ -1,6 +1,9 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,53 +15,54 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.service.MyraAccessibilityService
 import com.example.ui.MyraSettings
 
 @Composable
 fun SettingsDialog(
     settings: MyraSettings,
-    onSaveApiKey: (String) -> Unit,
     onSelectVoice: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var apiKeyInput by remember { mutableStateOf(settings.apiKey) }
+    val context = LocalContext.current
     val voices = listOf("Aoede", "Puck", "Charon", "Kore", "Fenrir")
+    val isAccessibilityActive = MyraAccessibilityService.isAccessibilityEnabled(context)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.Key,
+                    imageVector = Icons.Default.Settings,
                     contentDescription = null,
                     tint = Color(0xFFA855F7),
                     modifier = Modifier.size(24.dp)
@@ -74,37 +78,159 @@ fun SettingsDialog(
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // API Key Section
+                // Secure Protected Status Card (API Key remains internal and invisible to users)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF0F172A))
+                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                        .testTag("ai_connection_status_card")
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF065F46))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Active",
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "AI Engine: Connected",
+                            color = Color(0xFFF8FAFC),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Gemini AI Core • Secured & Linked",
+                            color = Color(0xFF38BDF8),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Background Assistant & Accessibility Section
                 Text(
-                    text = "Gemini API Key",
+                    text = "Background Assistant & Access",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF94A3B8),
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                OutlinedTextField(
-                    value = apiKeyInput,
-                    onValueChange = { apiKeyInput = it },
-                    placeholder = { Text("AI Studio Secrets or enter key", color = Color(0xFF64748B)) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFFA855F7),
-                        unfocusedBorderColor = Color(0xFF334155),
-                        focusedContainerColor = Color(0xFF1E293B),
-                        unfocusedContainerColor = Color(0xFF0F172A)
-                    ),
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // 1. Accessibility Service Card
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("settings_api_key_input")
-                )
-                Text(
-                    text = "Injected securely from Secrets panel or override here for testing.",
-                    fontSize = 11.sp,
-                    color = Color(0xFF64748B),
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                )
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF131D33))
+                        .border(1.dp, if (isAccessibilityActive) Color(0xFF059669) else Color(0xFF334155), RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Accessibility,
+                        contentDescription = null,
+                        tint = if (isAccessibilityActive) Color(0xFF34D399) else Color(0xFFA855F7),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Accessibility Service",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isAccessibilityActive) "Active • Background tasks allowed" else "Bina app open kiye tasks run karne ke liye",
+                            color = if (isAccessibilityActive) Color(0xFF34D399) else Color(0xFF94A3B8),
+                            fontSize = 10.sp
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF38BDF8)),
+                        modifier = Modifier.testTag("btn_enable_accessibility")
+                    ) {
+                        Text(if (isAccessibilityActive) "Manage" else "Enable", fontSize = 11.sp)
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(12.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 2. Default Assistant System Trigger
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF131D33))
+                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = Color(0xFF06B6D4),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Default System Assistant",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Mic activates silently with status bar green dot",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 10.sp
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_VOICE_INPUT_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                context.startActivity(Intent(Settings.ACTION_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                })
+                            }
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF06B6D4)),
+                        modifier = Modifier.testTag("btn_set_default_assistant")
+                    ) {
+                        Text("Set Default", fontSize = 11.sp)
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(12.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Voice Selection
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -116,7 +242,7 @@ fun SettingsDialog(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Live Voice Profile",
+                        text = "Voice Tone & Persona",
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF94A3B8),
                         fontWeight = FontWeight.SemiBold
@@ -149,7 +275,7 @@ fun SettingsDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Multilingual note
                 Row(
@@ -158,26 +284,26 @@ fun SettingsDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color(0xFF1E293B))
-                        .padding(10.dp)
+                        .padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Translate,
                         contentDescription = null,
                         tint = Color(0xFF38BDF8),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Column {
                         Text(
-                            text = "Automatic Multilingual Support",
+                            text = "Multilingual Recognition",
                             color = Color(0xFF38BDF8),
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "MYRA understands Hindi, English, Hinglish, Marathi, Tamil, Telugu, and adapts automatically to your language.",
+                            text = "Recognizes Hindi, English & Hinglish automatically.",
                             color = Color(0xFF94A3B8),
-                            fontSize = 11.sp
+                            fontSize = 10.sp
                         )
                     }
                 }
@@ -185,25 +311,14 @@ fun SettingsDialog(
         },
         confirmButton = {
             Button(
-                onClick = {
-                    onSaveApiKey(apiKeyInput)
-                    onDismiss()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA855F7)),
-                modifier = Modifier.testTag("settings_save_button")
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(
                 onClick = onDismiss,
-                modifier = Modifier.testTag("settings_cancel_button")
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA855F7)),
+                modifier = Modifier.testTag("settings_done_button")
             ) {
-                Text("Close", color = Color(0xFF94A3B8))
+                Text("Done")
             }
         },
-        containerColor = Color(0xFF0F172A),
+        containerColor = Color(0xFF0A0F1D),
         modifier = modifier.testTag("settings_dialog")
     )
 }

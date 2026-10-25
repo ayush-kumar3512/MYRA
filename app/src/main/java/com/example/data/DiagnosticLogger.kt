@@ -26,18 +26,24 @@ object DiagnosticLogger {
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
     val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
 
+    private fun sanitize(text: String): String {
+        return text.replace(Regex("key=[^&\\s]+"), "key=PROTECTED_KEY")
+            .replace(Regex("AQ\\.[a-zA-Z0-9_-]+"), "PROTECTED_KEY")
+    }
+
     fun log(tag: String, message: String, level: LogLevel = LogLevel.INFO, throwable: Throwable? = null) {
         val time = timeFormat.format(Date())
-        val fullMessage = if (throwable != null) "$message: ${throwable.message}" else message
-        
+        val rawMessage = if (throwable != null) "$message: ${throwable.message}" else message
+        val safeMessage = sanitize(rawMessage)
+
         when (level) {
-            LogLevel.DEBUG -> Log.d(tag, fullMessage, throwable)
-            LogLevel.INFO -> Log.i(tag, fullMessage, throwable)
-            LogLevel.WARN -> Log.w(tag, fullMessage, throwable)
-            LogLevel.ERROR -> Log.e(tag, fullMessage, throwable)
+            LogLevel.DEBUG -> Log.d(tag, safeMessage, throwable)
+            LogLevel.INFO -> Log.i(tag, safeMessage, throwable)
+            LogLevel.WARN -> Log.w(tag, safeMessage, throwable)
+            LogLevel.ERROR -> Log.e(tag, safeMessage, throwable)
         }
 
-        val entry = LogEntry(timestamp = time, tag = tag, message = fullMessage, level = level)
+        val entry = LogEntry(timestamp = time, tag = tag, message = safeMessage, level = level)
         val currentList = _logs.value.toMutableList()
         if (currentList.size >= MAX_LOGS) {
             currentList.removeAt(0)
