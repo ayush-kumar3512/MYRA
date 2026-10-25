@@ -9,22 +9,28 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.ui.AssistantStatus
 import kotlin.math.cos
 import kotlin.math.sin
@@ -95,7 +101,7 @@ fun VoiceVisualizerOrb(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(260.dp)
+            .size(270.dp)
             .testTag("voice_visualizer_orb")
             .clickable(
                 indication = null,
@@ -103,30 +109,30 @@ fun VoiceVisualizerOrb(
                 onClick = onClick
             )
     ) {
-        Canvas(modifier = Modifier.size(260.dp)) {
+        Canvas(modifier = Modifier.size(270.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val baseRadius = (size.minDimension / 4.2f) * breathingScale
-            val dynamicRadius = baseRadius + (amplitude * 55f)
+            val baseRadius = (size.minDimension / 3.4f) * breathingScale
+            val dynamicRadius = baseRadius + (amplitude * 45f)
 
             // 1. Outer ambient glow ring
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        primaryColor.copy(alpha = 0.35f + (amplitude * 0.4f).coerceAtMost(0.5f)),
-                        secondaryColor.copy(alpha = 0.15f),
+                        primaryColor.copy(alpha = 0.4f + (amplitude * 0.4f).coerceAtMost(0.5f)),
+                        secondaryColor.copy(alpha = 0.2f),
                         Color.Transparent
                     ),
                     center = center,
-                    radius = dynamicRadius * 1.8f
+                    radius = dynamicRadius * 1.6f
                 ),
-                radius = dynamicRadius * 1.8f,
+                radius = dynamicRadius * 1.6f,
                 center = center
             )
 
             // 2. Expanding acoustic ripple wave (when active)
             if (status == AssistantStatus.LISTENING || status == AssistantStatus.SPEAKING) {
-                val rippleRadius = dynamicRadius + (pulsePhase * 45f)
-                val rippleAlpha = (1f - pulsePhase) * 0.4f
+                val rippleRadius = dynamicRadius + (pulsePhase * 50f)
+                val rippleAlpha = (1f - pulsePhase) * 0.45f
                 drawCircle(
                     color = primaryColor.copy(alpha = rippleAlpha),
                     radius = rippleRadius,
@@ -139,11 +145,11 @@ fun VoiceVisualizerOrb(
             val numArcs = 8
             for (i in 0 until numArcs) {
                 val angleRad = Math.toRadians((rotation + (i * (360f / numArcs))).toDouble())
-                val arcRadius = dynamicRadius * 1.15f + (sin(angleRad * 3) * 6f).toFloat() * (1f + amplitude * 2f)
+                val arcRadius = dynamicRadius * 1.1f + (sin(angleRad * 3) * 6f).toFloat() * (1f + amplitude * 2f)
                 val startX = center.x + (cos(angleRad) * (arcRadius - 12f)).toFloat()
                 val startY = center.y + (sin(angleRad) * (arcRadius - 12f)).toFloat()
-                val endX = center.x + (cos(angleRad) * (arcRadius + 12f + (amplitude * 35f))).toFloat()
-                val endY = center.y + (sin(angleRad) * (arcRadius + 12f + (amplitude * 35f))).toFloat()
+                val endX = center.x + (cos(angleRad) * (arcRadius + 14f + (amplitude * 35f))).toFloat()
+                val endY = center.y + (sin(angleRad) * (arcRadius + 14f + (amplitude * 35f))).toFloat()
 
                 drawLine(
                     brush = Brush.linearGradient(
@@ -155,35 +161,20 @@ fun VoiceVisualizerOrb(
                     cap = StrokeCap.Round
                 )
             }
-
-            // 4. Central high-energy luminous core
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.95f),
-                        primaryColor.copy(alpha = 0.85f),
-                        secondaryColor.copy(alpha = 0.95f)
-                    ),
-                    center = center,
-                    radius = dynamicRadius
-                ),
-                radius = dynamicRadius,
-                center = center
-            )
-
-            // 5. Specular highlight for 3D glassy orb feel
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.8f),
-                        Color.Transparent
-                    ),
-                    center = Offset(center.x - dynamicRadius * 0.35f, center.y - dynamicRadius * 0.35f),
-                    radius = dynamicRadius * 0.45f
-                ),
-                radius = dynamicRadius * 0.45f,
-                center = Offset(center.x - dynamicRadius * 0.35f, center.y - dynamicRadius * 0.35f)
-            )
         }
+
+        // Central MYRA Logo Avatar with breathing and glow
+        Image(
+            painter = painterResource(R.drawable.myra_logo),
+            contentDescription = "MYRA AI Logo",
+            modifier = Modifier
+                .size((140.dp * breathingScale) + (amplitude * 24).dp)
+                .shadow(
+                    elevation = 18.dp,
+                    shape = CircleShape,
+                    spotColor = primaryColor
+                )
+                .clip(CircleShape)
+        )
     }
 }

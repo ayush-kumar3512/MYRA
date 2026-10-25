@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,6 +62,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -170,21 +172,25 @@ fun MyraScreen(
                         .padding(top = 10.dp, bottom = 6.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
+                        Image(
+                            painter = painterResource(R.drawable.myra_logo),
+                            contentDescription = "MYRA Logo",
                             modifier = Modifier
-                                .size(10.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    when (status) {
+                                .border(
+                                    width = 2.dp,
+                                    color = when (status) {
                                         AssistantStatus.LISTENING -> Color(0xFF06B6D4)
                                         AssistantStatus.SPEAKING -> Color(0xFFEC4899)
                                         AssistantStatus.CONNECTING -> Color(0xFFF59E0B)
                                         AssistantStatus.ERROR -> Color(0xFFEF4444)
                                         else -> Color(0xFF818CF8)
-                                    }
+                                    },
+                                    shape = CircleShape
                                 )
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
                                 text = stringResource(R.string.assistant_title),
